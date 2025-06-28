@@ -1,0 +1,81 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+dist.zip
+dist.tar
+dist.war
+.nitro
+.output
+*-dist.zip
+*-dist.tar
+*-dist.war
+coverage
+*.local
+**/.vitepress/cache
+.cache
+.turbo
+.temp
+dev-dist
+.stylelintcache
+yarn.lock
+package-lock.json
+.VSCodeCounter
+**/backend-mock/data
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.analyze
+
+# Cache and temporary files
+.eslintcache
+.prettiercache
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime config files
+vite.config.mts.*
+vite.config.mjs.*
+vite.config.js.*
+vite.config.ts.*
+
+# Test results and coverage
+coverage/
+.nyc_output
+test-results/
+playwright-report/
+**/.e2e/
+
+# Editor directories and files
+.idea
+# .vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.history
+
+# OS specific files
+Thumbs.db
+.DS_Store?
+
+# Runtime and build artifacts
+*.tgz
+*.tar.gz
+storybook-static/

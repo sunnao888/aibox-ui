@@ -1,0 +1,10 @@
+# .eslintignore
+
+# 忽略构建产物
+dist
+node_modules
+
+# ... 其他已经被忽略的文件或文件夹 ...
+
+# 新增这一行，告诉 ESLint 不要检查这个配置文件
+.commitlintrc.js
