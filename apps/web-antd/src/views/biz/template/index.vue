@@ -7,7 +7,7 @@ import { ref } from 'vue';
 import { Page, useVbenModal } from '@vben/common-ui';
 import { downloadFileFromBlobPart, isEmpty } from '@vben/utils';
 
-import { message } from 'ant-design-vue';
+import { Tag as ATag, message } from 'ant-design-vue';
 
 import { ACTION_ICON, TableAction, useVbenVxeGrid } from '#/adapter/vxe-table';
 import {
@@ -44,13 +44,13 @@ function handleEdit(row: TemplateApi.Template) {
 /** 删除模板 */
 async function handleDelete(row: TemplateApi.Template) {
   const hideLoading = message.loading({
-    content: $t('ui.actionMessage.deleting', [row.id]),
+    content: $t('ui.actionMessage.deleting', [row.name || row.id]),
     key: 'action_key_msg',
   });
   try {
     await deleteTemplate(row.id as number);
     message.success({
-      content: $t('ui.actionMessage.deleteSuccess', [row.id]),
+      content: $t('ui.actionMessage.deleteSuccess', [row.name || row.id]),
       key: 'action_key_msg',
     });
     onRefresh();
@@ -176,12 +176,27 @@ const [Grid, gridApi] = useVbenVxeGrid({
               icon: ACTION_ICON.DELETE,
               auth: ['biz:template:delete'],
               popConfirm: {
-                title: $t('ui.actionMessage.deleteConfirm', [row.id]),
+                title: $t('ui.actionMessage.deleteConfirm', [
+                  row.name || row.id,
+                ]),
                 confirm: handleDelete.bind(null, row),
               },
             },
           ]"
         />
+      </template>
+      <template #tags="{ row }">
+        <span v-if="row.tags && row.tags.length > 0">
+          <ATag
+            v-for="tag in row.tags"
+            :key="tag.id"
+            color="blue"
+            style="margin: 2px"
+          >
+            {{ tag.name }}
+          </ATag>
+        </span>
+        <span v-else>-</span>
       </template>
     </Grid>
   </Page>

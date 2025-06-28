@@ -2,6 +2,9 @@ import type { VbenFormSchema } from '#/adapter/form';
 import type { VxeTableGridOptions } from '#/adapter/vxe-table';
 import type { TagApi } from '#/api/biz/tag';
 
+import { z } from '#/adapter/form';
+import { CommonStatusEnum, DICT_TYPE, getDictOptions } from '#/utils';
+
 /** 新增/修改的表单 */
 export function useFormSchema(): VbenFormSchema[] {
   return [
@@ -25,13 +28,13 @@ export function useFormSchema(): VbenFormSchema[] {
     {
       fieldName: 'status',
       label: '状态',
-      rules: 'required',
       component: 'RadioGroup',
       componentProps: {
-        options: [],
+        options: getDictOptions(DICT_TYPE.COMMON_STATUS, 'number'),
         buttonStyle: 'solid',
         optionType: 'button',
       },
+      rules: z.number().default(CommonStatusEnum.ENABLE),
     },
   ];
 }
@@ -54,7 +57,7 @@ export function useGridFormSchema(): VbenFormSchema[] {
       component: 'Select',
       componentProps: {
         allowClear: true,
-        options: [],
+        options: getDictOptions(DICT_TYPE.COMMON_STATUS, 'number'),
         placeholder: '请选择状态',
       },
     },
@@ -74,6 +77,10 @@ export function useGridColumns(): VxeTableGridOptions<TagApi.Tag>['columns'] {
       field: 'status',
       title: '状态',
       minWidth: 120,
+      cellRender: {
+        name: 'CellDict',
+        props: { type: DICT_TYPE.COMMON_STATUS },
+      },
     },
     {
       field: 'createTime',

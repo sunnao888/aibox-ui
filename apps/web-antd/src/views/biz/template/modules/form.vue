@@ -77,6 +77,10 @@ const [Modal, modalApi] = useVbenModal({
     }
     // 设置到 values
     formData.value = data;
+    // 如果是编辑状态，需要从tags中提取tagIds
+    if (data.tags?.length) {
+      data.tagIds = data.tags.map((tag) => tag.id);
+    }
     await formApi.setValues(formData.value);
   },
 });

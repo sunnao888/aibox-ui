@@ -3,12 +3,24 @@ import type { PageParam, PageResult } from '@vben/request';
 import { requestClient } from '#/api/request';
 
 export namespace TemplateApi {
+  /** 标签信息 */
+  export interface Tag {
+    id: number;
+    name: string;
+    status: boolean;
+    createTime: string;
+  }
+
   /** 模板信息 */
   export interface Template {
     id: number; // 用户ID
+    name?: string; // 模板名称
     type?: number; // 模板类型
     input?: string; // 输入用例
     output?: string; // 输出用例
+    createTime?: string; // 创建时间
+    tags?: Tag[]; // 关联的标签列表
+    tagIds?: number[]; // 标签ID列表（用于表单提交）
   }
 }
 
