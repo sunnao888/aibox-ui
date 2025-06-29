@@ -3,15 +3,9 @@ import type { NotificationItem } from '@vben/layouts';
 
 import { computed, onMounted, ref, watch } from 'vue';
 
-import { AuthenticationLoginExpiredModal, useVbenModal } from '@vben/common-ui';
-import { VBEN_DOC_URL, VBEN_GITHUB_URL } from '@vben/constants';
+import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
 import { useWatermark } from '@vben/hooks';
-import {
-  AntdProfileOutlined,
-  BookOpenText,
-  CircleHelp,
-  MdiGithub,
-} from '@vben/icons';
+import { MdiGithub } from '@vben/icons';
 import {
   BasicLayout,
   LockScreen,
@@ -28,12 +22,9 @@ import {
   updateAllNotifyMessageRead,
   updateNotifyMessageRead,
 } from '#/api/system/notify/message';
-import { $t } from '#/locales';
 import { router } from '#/router';
 import { useAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
-
-import Help from './components/help.vue';
 
 const userStore = useUserStore();
 const authStore = useAuthStore();
@@ -44,42 +35,15 @@ const notifications = ref<NotificationItem[]>([]);
 const unreadCount = ref(0);
 const showDot = computed(() => unreadCount.value > 0);
 
-const [HelpModal, helpModalApi] = useVbenModal({
-  connectedComponent: Help,
-});
-
 const menus = computed(() => [
   {
     handler: () => {
-      router.push({ name: 'Profile' });
-    },
-    icon: AntdProfileOutlined,
-    text: $t('ui.widgets.profile'),
-  },
-  {
-    handler: () => {
-      openWindow(VBEN_DOC_URL, {
-        target: '_blank',
-      });
-    },
-    icon: BookOpenText,
-    text: $t('ui.widgets.document'),
-  },
-  {
-    handler: () => {
-      openWindow(VBEN_GITHUB_URL, {
+      openWindow('https://github.com/sunnao888', {
         target: '_blank',
       });
     },
     icon: MdiGithub,
     text: 'GitHub',
-  },
-  {
-    handler: () => {
-      helpModalApi.open();
-    },
-    icon: CircleHelp,
-    text: $t('ui.widgets.qa'),
   },
 ]);
 
@@ -214,5 +178,4 @@ watch(
       <LockScreen :avatar @to-login="handleLogout" />
     </template>
   </BasicLayout>
-  <HelpModal />
 </template>

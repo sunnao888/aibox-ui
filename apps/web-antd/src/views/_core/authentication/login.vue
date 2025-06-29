@@ -2,18 +2,16 @@
 import type { VbenFormSchema } from '@vben/common-ui';
 
 import { computed, ref } from 'vue';
-import { useRoute } from 'vue-router';
 
 import { AuthenticationLogin, Verification, z } from '@vben/common-ui';
 import { isCaptchaEnable } from '@vben/hooks';
 import { $t } from '@vben/locales';
 
-import { checkCaptcha, getCaptcha, socialAuthRedirect } from '#/api/core/auth';
+import { checkCaptcha, getCaptcha } from '#/api/core/auth';
 import { useAuthStore } from '#/store';
 
 defineOptions({ name: 'Login' });
 
-const { query } = useRoute();
 const authStore = useAuthStore();
 const captchaEnable = isCaptchaEnable();
 
@@ -42,29 +40,6 @@ async function handleVerifySuccess({ captchaVerification }: any) {
     });
   } catch (error) {
     console.error('Error in handleLogin:', error);
-  }
-}
-
-/** 处理第三方登录 */
-const redirect = query?.redirect;
-
-async function handleThirdLogin(type: number) {
-  if (type <= 0) {
-    return;
-  }
-  try {
-    // 计算 redirectUri
-    // tricky: type、redirect 需要先 encode 一次，否则钉钉回调会丢失。配合 social-login.vue#getUrlValue() 使用
-    const redirectUri = `${
-      location.origin
-    }/auth/social-login?${encodeURIComponent(
-      `type=${type}&redirect=${redirect || '/'}`,
-    )}`;
-
-    // 进行跳转
-    window.location.href = await socialAuthRedirect(type, redirectUri);
-  } catch (error) {
-    console.error('第三方登录处理失败:', error);
   }
 }
 
@@ -104,8 +79,10 @@ const formSchema = computed((): VbenFormSchema[] => {
       ref="loginRef"
       :form-schema="formSchema"
       :loading="authStore.loginLoading"
+      :show-code-login="false"
+      :show-qrcode-login="false"
+      :show-third-party-login="false"
       @submit="handleLogin"
-      @third-login="handleThirdLogin"
     />
     <Verification
       v-if="captchaEnable"

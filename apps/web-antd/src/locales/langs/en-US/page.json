@@ -6,11 +6,6 @@
     "qrcodeLogin": "Qr Code Login",
     "forgetPassword": "Forget Password"
   },
-  "dashboard": {
-    "title": "Dashboard",
-    "analytics": "Analytics",
-    "workspace": "Workspace"
-  },
   "action": {
     "action": "Action",
     "add": "Add",

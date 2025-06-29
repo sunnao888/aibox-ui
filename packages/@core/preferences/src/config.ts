@@ -17,7 +17,7 @@ const defaultPreferences: Preferences = {
     contentPaddingTop: 0,
     defaultAvatar:
       'https://unpkg.com/@vbenjs/static-source@0.1.7/source/avatar-v1.webp',
-    defaultHomePath: '/analytics',
+    defaultHomePath: '/work/report',
     dynamicTitle: true,
     enableCheckUpdates: true,
     enablePreferences: true,
@@ -62,7 +62,8 @@ const defaultPreferences: Preferences = {
 
   logo: {
     enable: true,
-    source: 'https://unpkg.com/@vbenjs/static-source@0.1.7/source/logo-v1.webp',
+    source:
+      'http://sunn-ipic.oss-cn-qingdao.aliyuncs.com/2025-06-29-111523.png',
   },
   navigation: {
     accordion: true,

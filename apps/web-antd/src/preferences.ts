@@ -33,7 +33,7 @@ export const overridesPreferences = defineOverridesPreferences({
     enable: false,
   },
   theme: {
-    mode: 'auto',
+    mode: 'light',
     radius: '0.75',
   },
   widget: {
