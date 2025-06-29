@@ -440,9 +440,9 @@ onMounted(() => {
                   <pre
                     style="
                       margin: 0;
-                      white-space: pre-wrap;
-                      word-wrap: break-word;
                       line-height: 1.4;
+                      word-wrap: break-word;
+                      white-space: pre-wrap;
                     "
                     >{{ template.input }}
                   </pre>
@@ -461,9 +461,9 @@ onMounted(() => {
                   <pre
                     style="
                       margin: 0;
-                      white-space: pre-wrap;
-                      word-wrap: break-word;
                       line-height: 1.4;
+                      word-wrap: break-word;
+                      white-space: pre-wrap;
                     "
                     >{{ template.output }}
                   </pre>
