@@ -1,4 +1,4 @@
-import {defineOverridesPreferences} from '@vben/preferences';
+import { defineOverridesPreferences } from '@vben/preferences';
 
 /**
  * @description 项目配置文件
@@ -6,39 +6,39 @@ import {defineOverridesPreferences} from '@vben/preferences';
  * !!! 更改配置后请清空缓存，否则可能不生效
  */
 export const overridesPreferences = defineOverridesPreferences({
-    // overrides
-    app: {
-        /** 后端路由模式 */
-        accessMode: 'backend',
-        name: import.meta.env.VITE_APP_TITLE,
-        enableRefreshToken: true,
-    },
-    footer: {
-        /** 默认关闭 footer 页脚，因为有一定遮挡 */
-        enable: false,
-        fixed: false,
-    },
-    copyright: {
-        companyName: import.meta.env.VITE_APP_TITLE,
-        companySiteLink: 'https://gitee.com/yudaocode/yudao-ui-admin-vben',
-    },
-    "header": {
-        "menuAlign": "center"
-    },
-    "sidebar": {
-        "collapsedButton": false,
-        "fixedButton": false
-    },
-    "tabbar": {
-        "enable": false
-    },
-    "theme": {
-        "mode": "auto",
-        "radius": "0.75"
-    },
-    "widget": {
-        "languageToggle": false,
-        "notification": false,
-        "refresh": false
-    }
+  // overrides
+  app: {
+    /** 后端路由模式 */
+    accessMode: 'backend',
+    name: import.meta.env.VITE_APP_TITLE,
+    enableRefreshToken: true,
+  },
+  footer: {
+    /** 默认关闭 footer 页脚，因为有一定遮挡 */
+    enable: false,
+    fixed: false,
+  },
+  copyright: {
+    companyName: import.meta.env.VITE_APP_TITLE,
+    companySiteLink: 'https://gitee.com/yudaocode/yudao-ui-admin-vben',
+  },
+  header: {
+    menuAlign: 'center',
+  },
+  sidebar: {
+    collapsedButton: false,
+    fixedButton: false,
+  },
+  tabbar: {
+    enable: false,
+  },
+  theme: {
+    mode: 'auto',
+    radius: '0.75',
+  },
+  widget: {
+    languageToggle: false,
+    notification: false,
+    refresh: false,
+  },
 });
