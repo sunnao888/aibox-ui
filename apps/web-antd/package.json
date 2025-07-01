@@ -52,6 +52,7 @@
     "crypto-js": "catalog:",
     "dayjs": "catalog:",
     "highlight.js": "catalog:",
+    "marked": "^16.0.0",
     "pinia": "catalog:",
     "vue": "catalog:",
     "vue-dompurify-html": "catalog:",
