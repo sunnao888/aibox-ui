@@ -1,7 +1,6 @@
-import type {PageParam, PageResult} from '@vben/request';
-import type {Dayjs} from 'dayjs';
+import type { PageParam, PageResult } from '@vben/request';
 
-import {requestClient} from '#/api/request';
+import { requestClient } from '#/api/request';
 
 export namespace KnowledgeApi {
   /** 知识库信息 */
@@ -15,12 +14,17 @@ export namespace KnowledgeApi {
 
 /** 查询知识库分页 */
 export function getKnowledgePage(params: PageParam) {
-  return requestClient.get<PageResult<KnowledgeApi.Knowledge>>('/biz/knowledge/page', { params });
+  return requestClient.get<PageResult<KnowledgeApi.Knowledge>>(
+    '/biz/knowledge/page',
+    { params },
+  );
 }
 
 /** 查询知识库详情 */
 export function getKnowledge(id: number) {
-  return requestClient.get<KnowledgeApi.Knowledge>(`/biz/knowledge/get?id=${id}`);
+  return requestClient.get<KnowledgeApi.Knowledge>(
+    `/biz/knowledge/get?id=${id}`,
+  );
 }
 
 /** 新增知识库 */
@@ -40,7 +44,9 @@ export function deleteKnowledge(id: number) {
 
 /** 批量删除知识库 */
 export function deleteKnowledgeListByIds(ids: number[]) {
-  return requestClient.delete(`/biz/knowledge/delete-list?ids=${ids.join(',')}`)
+  return requestClient.delete(
+    `/biz/knowledge/delete-list?ids=${ids.join(',')}`,
+  );
 }
 
 /** 导出知识库 */

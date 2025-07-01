@@ -212,13 +212,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.knowledge-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
-  margin-bottom: 24px;
-}
-
 @media (max-width: 768px) {
   .knowledge-grid {
     grid-template-columns: 1fr;
@@ -235,27 +228,34 @@ onMounted(() => {
   }
 }
 
+.knowledge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
 .knowledge-card {
-  transition: all 0.3s ease;
-  border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.3s ease;
 }
 
 .knowledge-card:hover {
+  box-shadow: 0 8px 25px rgb(0 0 0 / 10%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .dark .knowledge-card:hover {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 25px rgb(0 0 0 / 30%);
 }
 
 .knowledge-card-content {
-  min-height: 120px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-height: 120px;
 }
 
 .empty-state {
@@ -265,8 +265,8 @@ onMounted(() => {
 
 .loading-wrapper {
   background: #fff;
-  border-radius: 12px;
   border: 1px solid #e5e7eb;
+  border-radius: 12px;
 }
 
 .dark .loading-wrapper {
@@ -276,26 +276,26 @@ onMounted(() => {
 
 /* 搜索框样式优化 */
 :deep(.ant-input-affix-wrapper) {
-  border-radius: 8px;
   border: 1px solid #d1d5db;
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 :deep(.ant-input-affix-wrapper:focus),
 :deep(.ant-input-affix-wrapper-focused) {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 2px rgb(59 130 246 / 10%);
 }
 
 .dark :deep(.ant-input-affix-wrapper) {
+  color: #f3f4f6;
   background-color: #374151;
   border-color: #4b5563;
-  color: #f3f4f6;
 }
 
 .dark :deep(.ant-input-affix-wrapper:focus),
 .dark :deep(.ant-input-affix-wrapper-focused) {
   border-color: #60a5fa;
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.1);
+  box-shadow: 0 0 0 2px rgb(96 165 250 / 10%);
 }
 </style>

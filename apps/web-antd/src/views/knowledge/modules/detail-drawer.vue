@@ -7,10 +7,11 @@ import { useVbenDrawer } from '@vben/common-ui';
 
 import { message } from 'ant-design-vue';
 import hljs from 'highlight.js';
-import 'highlight.js/styles/github-dark.css'; // 导入代码高亮样式
 import { marked } from 'marked';
 
 import { getKnowledge } from '#/api/biz/knowledge';
+
+import 'highlight.js/styles/github-dark.css'; // 导入代码高亮样式
 
 defineOptions({
   name: 'KnowledgeDetailDrawer',
@@ -26,7 +27,7 @@ const renderer = new marked.Renderer();
 // 配置marked选项
 marked.setOptions({
   renderer,
-  highlight: function (code, lang) {
+  highlight(code, lang) {
     const language = hljs.getLanguage(lang) ? lang : 'plaintext';
     return hljs.highlight(code, { language }).value;
   },
@@ -151,8 +152,8 @@ const addCopyButtons = () => {
       }, 2000);
     });
 
-    btnContainer.appendChild(copyBtn);
-    pre.appendChild(btnContainer);
+    btnContainer.append(copyBtn);
+    pre.append(btnContainer);
   });
 };
 
@@ -204,7 +205,49 @@ defineExpose({
 </template>
 
 <style scoped>
-/* 滚动条样式 */
+/* 移动端优化 */
+@media (max-width: 768px) {
+  :deep(.markdown-content) {
+    @apply p-4 text-sm;
+  }
+
+  :deep(.markdown-content h1) {
+    @apply mb-3 mt-6 text-xl;
+  }
+
+  :deep(.markdown-content h2) {
+    @apply mb-2 mt-5 text-lg;
+  }
+
+  :deep(.markdown-content h3) {
+    @apply mb-2 mt-4 text-base;
+  }
+
+  :deep(.markdown-content pre) {
+    @apply p-3 text-xs;
+
+    font-size: 12px;
+  }
+
+  :deep(.markdown-content table) {
+    @apply text-xs;
+  }
+
+  :deep(.markdown-content th),
+  :deep(.markdown-content td) {
+    @apply px-2 py-1;
+  }
+
+  /* 移动端复制按钮优化 */
+  :deep(.copy-btn) {
+    @apply px-2 py-1 text-xs;
+  }
+
+  :deep(.copy-btn svg) {
+    @apply h-2.5 w-2.5;
+  }
+}
+
 :deep(.overflow-y-auto)::-webkit-scrollbar {
   @apply w-1.5;
 }
@@ -285,13 +328,15 @@ defineExpose({
 /* 代码块样式 */
 :deep(.markdown-content pre) {
   @apply relative my-4 overflow-x-auto rounded-lg border border-gray-700 bg-gray-900 p-4 text-gray-100 dark:border-gray-800 dark:bg-gray-950;
-  font-family: 'Fira Code', 'Monaco', 'Consolas', 'Ubuntu Mono', monospace;
+
+  font-family: 'Fira Code', Monaco, Consolas, 'Ubuntu Mono', monospace;
   font-size: 13px;
   line-height: 1.5;
 }
 
 :deep(.markdown-content pre code) {
   @apply rounded-none border-0 bg-transparent p-0 text-inherit;
+
   font-family: inherit;
 }
 
@@ -346,45 +391,5 @@ defineExpose({
   @apply text-gray-500 line-through dark:text-gray-400;
 }
 
-/* 移动端优化 */
-@media (max-width: 768px) {
-  :deep(.markdown-content) {
-    @apply p-4 text-sm;
-  }
-
-  :deep(.markdown-content h1) {
-    @apply mb-3 mt-6 text-xl;
-  }
-
-  :deep(.markdown-content h2) {
-    @apply mb-2 mt-5 text-lg;
-  }
-
-  :deep(.markdown-content h3) {
-    @apply mb-2 mt-4 text-base;
-  }
-
-  :deep(.markdown-content pre) {
-    @apply p-3 text-xs;
-    font-size: 12px;
-  }
-
-  :deep(.markdown-content table) {
-    @apply text-xs;
-  }
-
-  :deep(.markdown-content th),
-  :deep(.markdown-content td) {
-    @apply px-2 py-1;
-  }
-
-  /* 移动端复制按钮优化 */
-  :deep(.copy-btn) {
-    @apply px-2 py-1 text-xs;
-  }
-
-  :deep(.copy-btn svg) {
-    @apply h-2.5 w-2.5;
-  }
-}
+/* 滚动条样式 */
 </style>
