@@ -30,6 +30,7 @@
   "dependencies": {
     "@form-create/ant-design-vue": "catalog:",
     "@form-create/antd-designer": "catalog:",
+    "@microsoft/fetch-event-source": "^2.0.1",
     "@tinymce/tinymce-vue": "catalog:",
     "@vben/access": "workspace:*",
     "@vben/common-ui": "workspace:*",
@@ -54,6 +55,7 @@
     "dayjs": "catalog:",
     "highlight.js": "catalog:",
     "marked": "^16.0.0",
+    "marked-highlight": "^2.2.2",
     "pinia": "catalog:",
     "vue": "catalog:",
     "vue-dompurify-html": "catalog:",

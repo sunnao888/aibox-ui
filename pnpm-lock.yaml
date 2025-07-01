@@ -637,6 +637,9 @@ importers:
       '@form-create/antd-designer':
         specifier: 'catalog:'
         version: 3.2.11(vue@3.5.13(typescript@5.8.3))
+      '@microsoft/fetch-event-source':
+        specifier: ^2.0.1
+        version: 2.0.1
       '@tinymce/tinymce-vue':
         specifier: 'catalog:'
         version: 6.1.0(vue@3.5.13(typescript@5.8.3))
@@ -709,6 +712,9 @@ importers:
       marked:
         specifier: ^16.0.0
         version: 16.0.0
+      marked-highlight:
+        specifier: ^2.2.2
+        version: 2.2.2(marked@16.0.0)
       pinia:
         specifier: ^3.0.2
         version: 3.0.2(typescript@5.8.3)(vue@3.5.13(typescript@5.8.3))
@@ -3627,6 +3633,9 @@ packages:
   '@microsoft/api-extractor@7.52.8':
     resolution: {integrity: sha512-cszYIcjiNscDoMB1CIKZ3My61+JOhpERGlGr54i6bocvGLrcL/wo9o+RNXMBrb7XgLtKaizZWUpqRduQuHQLdg==}
     hasBin: true
+
+  '@microsoft/fetch-event-source@2.0.1':
+    resolution: {integrity: sha512-W6CLUJ2eBMw3Rec70qrsEW0jOm/3twwJv21mrmj2yORiaVmVYGS4sSS5yUwvQc1ZlDLYGPnClVWmUUMagKNsfA==}
 
   '@microsoft/tsdoc-config@0.17.1':
     resolution: {integrity: sha512-UtjIFe0C6oYgTnad4q1QP4qXwLhe6tIpNTRStJ2RZEPIkqQPREAwE5spzVxsdn9UaEMUqhh0AqSx3X4nWAKXWw==}
@@ -7909,6 +7918,11 @@ packages:
   markdown-it@14.1.0:
     resolution: {integrity: sha512-a54IwgWPaeBCAAsv13YgmALOF1elABB08FxO9i+r4VFk5Vl4pKokRPeX8u5TCgSsPi6ec1otfLjdOpVcgbpshg==}
     hasBin: true
+
+  marked-highlight@2.2.2:
+    resolution: {integrity: sha512-KlHOP31DatbtPPXPaI8nx1KTrG3EW0Z5zewCwpUj65swbtKOTStteK3sNAjBqV75Pgo3fNEVNHeptg18mDuWgw==}
+    peerDependencies:
+      marked: '>=4 <17'
 
   marked@16.0.0:
     resolution: {integrity: sha512-MUKMXDjsD/eptB7GPzxo4xcnLS6oo7/RHimUMHEDRhUooPwmN9BEpMl7AEOJv3bmso169wHI2wUF9VQgL7zfmA==}
@@ -13302,6 +13316,8 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
 
+  '@microsoft/fetch-event-source@2.0.1': {}
+
   '@microsoft/tsdoc-config@0.17.1':
     dependencies:
       '@microsoft/tsdoc': 0.15.1
@@ -18082,6 +18098,10 @@ snapshots:
       mdurl: 2.0.0
       punycode.js: 2.3.1
       uc.micro: 2.1.0
+
+  marked-highlight@2.2.2(marked@16.0.0):
+    dependencies:
+      marked: 16.0.0
 
   marked@16.0.0: {}
 

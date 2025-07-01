@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import type { BubbleListProps, PromptsProps } from 'ant-design-x-vue';
 
-import { computed, h, ref } from 'vue';
+import type { ManusApi } from '#/api/manus';
+
+import { computed, h, onUnmounted, ref } from 'vue';
 
 import { Page } from '@vben/common-ui';
 import { IconifyIcon } from '@vben/icons';
 
-import { Card, Space } from 'ant-design-vue';
+import { message as antMessage, Card, Space, Tag } from 'ant-design-vue';
 import {
   Bubble,
   Prompts,
@@ -15,8 +17,24 @@ import {
   useXChat,
   Welcome,
 } from 'ant-design-x-vue';
+import hljs from 'highlight.js';
+import { marked } from 'marked';
+import { markedHighlight } from 'marked-highlight';
+
+import { jManusStream } from '#/api/manus';
 
 defineOptions({ name: 'AIAssistant' });
+
+// 配置 marked
+marked.use(
+  markedHighlight({
+    langPrefix: 'hljs language-',
+    highlight(code, lang) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    },
+  }),
+);
 
 const renderLabel = (iconName: string, title: string) =>
   h(Space, { align: 'start' }, () => [
@@ -106,44 +124,102 @@ const roles: BubbleListProps['roles'] = {
       },
     },
   },
+  system: {
+    placement: 'start',
+    variant: 'borderless',
+    styles: {
+      content: {
+        borderRadius: '8px',
+        backgroundColor: '#f0f4f8',
+        border: '1px solid #e2e8f0',
+        padding: '12px 16px',
+        maxWidth: '70%',
+      },
+    },
+  },
 };
 
 // ==================== State ====================
 const content = ref('');
 const agentRequestLoading = ref(false);
+const sseCloseFunc = ref<(() => void) | null>(null);
+const streamingMessages = ref<
+  Array<{
+    content: string;
+    id: string;
+    role: 'ai' | 'user';
+    type?: 'AGENT' | 'SYSTEM';
+  }>
+>([]);
 
 // ==================== Runtime ====================
 const [agent] = useXAgent({
-  request: async ({ message }, { onUpdate, onSuccess }) => {
+  request: async ({ message }, { onUpdate, onSuccess, onError }) => {
     agentRequestLoading.value = true;
+    streamingMessages.value = [];
 
-    // 模拟打字效果
-    const mockResponse = `感谢您的提问！关于 "${message}"，我来为您详细解答：
-
-这是一个非常好的问题。让我从几个方面来为您分析：
-
-1. **核心概念**：首先，我们需要理解相关的基础知识...
-2. **实际应用**：在实际场景中，这个概念可以这样应用...
-3. **注意事项**：使用时需要特别注意以下几点...
-
-希望这个回答对您有所帮助！如果您还有其他问题，请随时告诉我。`;
-
-    let currentText = '';
-    const words = [...mockResponse];
-
-    for (const word of words) {
-      await new Promise((resolve) => setTimeout(resolve, 30));
-      currentText += word;
-      onUpdate(currentText);
+    // 关闭之前的连接
+    if (sseCloseFunc.value) {
+      sseCloseFunc.value();
+      sseCloseFunc.value = null;
     }
 
-    agentRequestLoading.value = false;
-    onSuccess(currentText);
+    try {
+      sseCloseFunc.value = jManusStream({
+        userMessage: message as string,
+        onMessage: (data: ManusApi.SSEData) => {
+          if (data.type === 'SYSTEM') {
+            // 添加系统消息
+            streamingMessages.value.push({
+              id: `system-${Date.now()}-${data.step}`,
+              role: 'ai',
+              content: data.result,
+              type: 'SYSTEM',
+            });
+          } else if (data.type === 'AGENT') {
+            // 添加助手消息
+            streamingMessages.value.push({
+              id: `agent-${Date.now()}-${data.step}`,
+              role: 'ai',
+              content: data.result,
+              type: 'AGENT',
+            });
+            // 更新显示（触发重新渲染）
+            onUpdate('streaming');
+          }
+        },
+        onError: (error) => {
+          console.error('SSE error:', error);
+          agentRequestLoading.value = false;
+          antMessage.error(`连接失败：${error.message || '未知错误'}`);
+          onError(error);
+        },
+        onClose: () => {
+          agentRequestLoading.value = false;
+          if (streamingMessages.value.length > 0) {
+            onSuccess('completed');
+          } else {
+            onError(new Error('连接关闭，未收到回复'));
+          }
+        },
+      });
+    } catch (error) {
+      agentRequestLoading.value = false;
+      onError(error as Error);
+    }
   },
 });
 
 const { onRequest, messages } = useXChat({
   agent: agent?.value,
+});
+
+// 组件卸载时清理SSE连接
+onUnmounted(() => {
+  if (sseCloseFunc.value) {
+    sseCloseFunc.value();
+    sseCloseFunc.value = null;
+  }
 });
 
 // ==================== Event ====================
@@ -167,19 +243,86 @@ const welcomeIcon = computed(() =>
   }),
 );
 
-const items = computed<BubbleListProps['items']>(
-  () =>
-    messages.value?.map(({ id, message, status }) => ({
-      key: id,
-      loading: status === 'loading',
-      role: status === 'local' ? 'local' : 'ai',
-      content: message,
-    })) || [],
-);
+const items = computed<BubbleListProps['items']>(() => {
+  if (!messages.value) return [];
+
+  const result: BubbleListProps['items'] = [];
+
+  messages.value.forEach(({ id, message, status }) => {
+    // 添加用户消息
+    if (status === 'local') {
+      result.push({
+        key: `${id}-user`,
+        role: 'local',
+        content: message,
+      });
+    } else if (status === 'loading' && streamingMessages.value.length > 0) {
+      // 正在加载时，显示所有已接收的流式消息
+      streamingMessages.value.forEach((msg) => {
+        if (msg.type === 'SYSTEM') {
+          // 系统消息使用方形气泡样式
+          result.push({
+            key: msg.id,
+            role: 'system',
+            content: h('div', { class: 'system-message-content' }, [
+              h(Tag, { color: 'blue', size: 'small' }, () => '系统'),
+              h('span', { class: 'ml-2 text-sm text-gray-700' }, msg.content),
+            ]),
+          });
+        } else {
+          // 助手消息
+          result.push({
+            key: msg.id,
+            role: 'ai',
+            content: h('div', {
+              innerHTML: marked(msg.content),
+              class: 'markdown-content',
+            }),
+          });
+        }
+      });
+    } else if (status === 'success') {
+      // 完成时，显示所有已接收的流式消息
+      streamingMessages.value.forEach((msg) => {
+        if (msg.type === 'SYSTEM') {
+          // 系统消息使用方形气泡样式
+          result.push({
+            key: msg.id,
+            role: 'system',
+            content: h('div', { class: 'system-message-content' }, [
+              h(Tag, { color: 'blue', size: 'small' }, () => '系统'),
+              h('span', { class: 'ml-2 text-sm text-gray-700' }, msg.content),
+            ]),
+          });
+        } else {
+          // 助手消息
+          result.push({
+            key: msg.id,
+            role: 'ai',
+            content: h('div', {
+              innerHTML: marked(msg.content),
+              class: 'markdown-content',
+            }),
+          });
+        }
+      });
+    } else if (status === 'loading') {
+      // 如果没有流式消息，显示加载中
+      result.push({
+        key: `${id}-ai`,
+        loading: true,
+        role: 'ai',
+        content: '正在思考...',
+      });
+    }
+  });
+
+  return result;
+});
 </script>
 
 <template>
-  <Page auto-content-height>
+  <Page class="h-full">
     <!-- 聊天容器 -->
     <Card class="flex h-full flex-col" :bordered="false">
       <!-- Body - 消息区域 -->
@@ -219,7 +362,7 @@ const items = computed<BubbleListProps['items']>(
       </div>
 
       <!-- Footer - 对话框区域，固定在卡片底部 -->
-      <div class="absolute bottom-4 left-4 right-4 rounded px-4 py-2 font-bold">
+      <div class="absolute bottom-4 left-4 right-4 rounded px-4 py-2">
         <!-- 输入框 -->
         <Sender
           v-model:value="content"
@@ -232,3 +375,88 @@ const items = computed<BubbleListProps['items']>(
     </Card>
   </Page>
 </template>
+
+<style scoped>
+.system-message-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+:deep(.ant-bubble-content) {
+  max-width: 80%;
+}
+
+:deep(.markdown-content) {
+  line-height: 1.6;
+}
+
+:deep(.markdown-content h1),
+:deep(.markdown-content h2),
+:deep(.markdown-content h3),
+:deep(.markdown-content h4),
+:deep(.markdown-content h5),
+:deep(.markdown-content h6) {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+:deep(.markdown-content p) {
+  margin-bottom: 8px;
+}
+
+:deep(.markdown-content ul),
+:deep(.markdown-content ol) {
+  padding-left: 20px;
+  margin-bottom: 8px;
+}
+
+:deep(.markdown-content li) {
+  margin-bottom: 4px;
+}
+
+:deep(.markdown-content code) {
+  padding: 2px 4px;
+  font-size: 0.9em;
+  background-color: #f0f0f0;
+  border-radius: 3px;
+}
+
+:deep(.markdown-content pre) {
+  padding: 12px;
+  margin-bottom: 8px;
+  overflow-x: auto;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+:deep(.markdown-content pre code) {
+  padding: 0;
+  background-color: transparent;
+}
+
+:deep(.markdown-content blockquote) {
+  padding-left: 16px;
+  margin: 8px 0;
+  color: #666;
+  border-left: 4px solid #e0e0e0;
+}
+
+:deep(.markdown-content a) {
+  color: #1890ff;
+  text-decoration: none;
+}
+
+:deep(.markdown-content a:hover) {
+  text-decoration: underline;
+}
+
+:deep(.markdown-content strong) {
+  font-weight: 600;
+}
+
+:deep(.markdown-content em) {
+  font-style: italic;
+}
+</style>
