@@ -1,6 +1,6 @@
 import type { EventSourceMessage } from '@microsoft/fetch-event-source';
 
-import { isTenantEnable } from '@vben/hooks';
+import { isTenantEnable, useAppConfig } from '@vben/hooks';
 import { preferences } from '@vben/preferences';
 import { useAccessStore } from '@vben/stores';
 
@@ -18,9 +18,16 @@ export interface SSEClientOptions {
   onClose?: () => void;
 }
 
+const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
+
 class SSEClient {
+  private baseURL: string;
   private controller: AbortController | null = null;
   private isClosing = false;
+
+  constructor(baseURL?: string) {
+    this.baseURL = baseURL || apiURL;
+  }
 
   close(): void {
     this.isClosing = true;
@@ -41,12 +48,11 @@ class SSEClient {
     const queryString = params
       ? `?${new URLSearchParams(params).toString()}`
       : '';
-    const fullUrl = url + queryString;
+    // 添加 baseURL 前缀
+    const fullUrl = `${this.baseURL}${url}${queryString}`;
 
     // 在连接时获取最新的headers
     const headers = this.getHeaders();
-    console.log('SSE Headers:', headers);
-    console.log('SSE URL:', fullUrl);
 
     try {
       await fetchEventSource(fullUrl, {
@@ -57,37 +63,34 @@ class SSEClient {
 
         async onopen(response) {
           const contentType = response.headers.get('content-type');
-          if (
-            response.ok &&
-            contentType?.includes('text/event-stream')
-          ) {
+          if (response.ok && contentType?.includes('text/event-stream')) {
             // SSE connection opened
             onOpen?.();
             return; // 明确返回，表示连接成功
           }
-          
+
           // 处理错误响应
           let errorText = '';
           try {
             errorText = await response.text();
-          } catch (e) {
+          } catch {
             errorText = 'Unable to read error response';
           }
-          
+
           console.error('SSE connection failed:', {
             status: response.status,
             statusText: response.statusText,
             headers: Object.fromEntries(response.headers.entries()),
             body: errorText,
           });
-          
+
           const error = new Error(
             `Failed to connect: ${response.status} ${response.statusText}. Response: ${errorText}`,
           );
-          
+
           // 触发错误回调
           onError?.(error);
-          
+
           // 抛出错误以停止连接尝试
           throw error;
         },
@@ -143,10 +146,10 @@ class SSEClient {
     // 添加租户信息
     if (tenantEnable) {
       if (accessStore.tenantId) {
-        headers['tenant-id'] = accessStore.tenantId;
+        headers['tenant-id'] = String(accessStore.tenantId);
       }
       if (accessStore.visitTenantId) {
-        headers['visit-tenant-id'] = accessStore.visitTenantId;
+        headers['visit-tenant-id'] = String(accessStore.visitTenantId);
       }
     }
 
@@ -154,8 +157,8 @@ class SSEClient {
   }
 }
 
-export function createSSEClient(): SSEClient {
-  return new SSEClient();
+export function createSSEClient(baseURL?: string): SSEClient {
+  return new SSEClient(baseURL);
 }
 
 // 导出一个获取带认证的 headers 的辅助函数
@@ -176,10 +179,10 @@ export function getSSEHeaders(): Record<string, string> {
   // 添加租户信息
   if (tenantEnable) {
     if (accessStore.tenantId) {
-      headers['tenant-id'] = accessStore.tenantId;
+      headers['tenant-id'] = String(accessStore.tenantId);
     }
     if (accessStore.visitTenantId) {
-      headers['visit-tenant-id'] = accessStore.visitTenantId;
+      headers['visit-tenant-id'] = String(accessStore.visitTenantId);
     }
   }
 

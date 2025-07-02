@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BubbleListProps, PromptsProps } from 'ant-design-x-vue';
 
-import type { ManusApi } from '#/api/manus';
+import type { ManusApi } from '#/api/biz/manus';
 
 import { computed, h, onUnmounted, ref } from 'vue';
 
@@ -21,7 +21,7 @@ import hljs from 'highlight.js';
 import { marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 
-import { jManusStream } from '#/api/manus';
+import { jManusStream } from '#/api/biz/manus';
 
 defineOptions({ name: 'AIAssistant' });
 
@@ -45,61 +45,61 @@ const renderLabel = (iconName: string, title: string) =>
 const placeholderPromptsItems: PromptsProps['items'] = [
   {
     key: '1',
-    label: renderLabel('lucide:flame', '热门话题'),
-    description: '探索当下热点',
+    label: renderLabel('lucide:flame', '时间助手'),
+    description: '查询时间',
     children: [
       {
         key: '1-1',
-        description: '最新科技趋势是什么？',
+        description: '告诉我现在的北京时间？',
       },
       {
         key: '1-2',
-        description: 'AI如何改变我们的生活？',
+        description: '告诉我现在的纽约时间？',
       },
       {
         key: '1-3',
-        description: '未来十年的发展方向？',
+        description: '告诉我现在的东京时间？',
       },
     ],
   },
   {
     key: '2',
-    label: renderLabel('lucide:book-open', '学习助手'),
-    description: '获取知识与技能',
+    label: renderLabel('lucide:book-open', '天气助手'),
+    description: '查询天气',
     children: [
       {
         key: '2-1',
         icon: h(IconifyIcon, { icon: 'lucide:heart' }),
-        description: '如何提升学习效率？',
+        description: '告诉我现在泰安的天气？',
       },
       {
         key: '2-2',
         icon: h(IconifyIcon, { icon: 'lucide:smile' }),
-        description: '推荐一些学习资源',
+        description: '告诉我现在北京的天气？',
       },
       {
         key: '2-3',
         icon: h(IconifyIcon, { icon: 'lucide:message-circle' }),
-        description: '解释一个复杂概念',
+        description: '告诉我现在上海的天气？',
       },
     ],
   },
   {
     key: '3',
-    label: renderLabel('lucide:file-text', '写作助手'),
-    description: '提升创作能力',
+    label: renderLabel('lucide:file-text', '新闻助手'),
+    description: '查询新闻',
     children: [
       {
         key: '3-1',
-        description: '帮我润色这段文字',
+        description: '整理最新的AI领域新闻？',
       },
       {
         key: '3-2',
-        description: '生成一份工作报告',
+        description: '整理最新的体育领域新闻？',
       },
       {
         key: '3-3',
-        description: '创作一个故事开头',
+        description: '整理最新的科技领域新闻？',
       },
     ],
   },
@@ -143,20 +143,29 @@ const roles: BubbleListProps['roles'] = {
 const content = ref('');
 const agentRequestLoading = ref(false);
 const sseCloseFunc = ref<(() => void) | null>(null);
-const streamingMessages = ref<
-  Array<{
-    content: string;
-    id: string;
-    role: 'ai' | 'user';
-    type?: 'AGENT' | 'SYSTEM';
-  }>
->([]);
+// 存储每个对话的流式消息
+const conversationMessages = ref<
+  Map<
+    string,
+    Array<{
+      content: string;
+      id: string;
+      role: 'ai' | 'user';
+      type?: 'AGENT' | 'SYSTEM';
+    }>
+  >
+>(new Map());
+// 当前对话的流式消息
+const currentConversationId = ref<null | string>(null);
 
 // ==================== Runtime ====================
 const [agent] = useXAgent({
   request: async ({ message }, { onUpdate, onSuccess, onError }) => {
     agentRequestLoading.value = true;
-    streamingMessages.value = [];
+
+    // 为新对话创建唯一ID
+    currentConversationId.value = `conv-${Date.now()}`;
+    conversationMessages.value.set(currentConversationId.value, []);
 
     // 关闭之前的连接
     if (sseCloseFunc.value) {
@@ -168,9 +177,14 @@ const [agent] = useXAgent({
       sseCloseFunc.value = jManusStream({
         userMessage: message as string,
         onMessage: (data: ManusApi.SSEData) => {
+          const currentMessages = conversationMessages.value.get(
+            currentConversationId.value!,
+          );
+          if (!currentMessages) return;
+
           if (data.type === 'SYSTEM') {
             // 添加系统消息
-            streamingMessages.value.push({
+            currentMessages.push({
               id: `system-${Date.now()}-${data.step}`,
               role: 'ai',
               content: data.result,
@@ -178,7 +192,7 @@ const [agent] = useXAgent({
             });
           } else if (data.type === 'AGENT') {
             // 添加助手消息
-            streamingMessages.value.push({
+            currentMessages.push({
               id: `agent-${Date.now()}-${data.step}`,
               role: 'ai',
               content: data.result,
@@ -196,7 +210,10 @@ const [agent] = useXAgent({
         },
         onClose: () => {
           agentRequestLoading.value = false;
-          if (streamingMessages.value.length > 0) {
+          const currentMessages = conversationMessages.value.get(
+            currentConversationId.value!,
+          );
+          if (currentMessages && currentMessages.length > 0) {
             onSuccess('completed');
           } else {
             onError(new Error('连接关闭，未收到回复'));
@@ -248,72 +265,110 @@ const items = computed<BubbleListProps['items']>(() => {
 
   const result: BubbleListProps['items'] = [];
 
-  messages.value.forEach(({ id, message, status }) => {
+  messages.value.forEach(({ id, message, status }, index) => {
     // 添加用户消息
-    if (status === 'local') {
-      result.push({
-        key: `${id}-user`,
-        role: 'local',
-        content: message,
-      });
-    } else if (status === 'loading' && streamingMessages.value.length > 0) {
-      // 正在加载时，显示所有已接收的流式消息
-      streamingMessages.value.forEach((msg) => {
-        if (msg.type === 'SYSTEM') {
-          // 系统消息使用方形气泡样式
-          result.push({
-            key: msg.id,
-            role: 'system',
-            content: h('div', { class: 'system-message-content' }, [
-              h(Tag, { color: 'blue', size: 'small' }, () => '系统'),
-              h('span', { class: 'ml-2 text-sm text-gray-700' }, msg.content),
-            ]),
+    switch (status) {
+      case 'loading': {
+        // 获取当前对话的消息
+        const currentMessages = conversationMessages.value.get(
+          currentConversationId.value!,
+        );
+        if (currentMessages && currentMessages.length > 0) {
+          // 正在加载时，显示当前对话的流式消息
+          currentMessages.forEach((msg) => {
+            if (msg.type === 'SYSTEM') {
+              // 系统消息使用方形气泡样式
+              result.push({
+                key: msg.id,
+                role: 'system',
+                content: h('div', { class: 'system-message-content' }, [
+                  h(Tag, { color: 'blue', size: 'small' }, () => '系统'),
+                  h(
+                    'span',
+                    { class: 'ml-2 text-sm text-gray-700' },
+                    msg.content,
+                  ),
+                ]),
+              });
+            } else {
+              // 助手消息
+              result.push({
+                key: msg.id,
+                role: 'ai',
+                content: h('div', {
+                  innerHTML: marked(msg.content),
+                  class: 'markdown-content',
+                }),
+              });
+            }
           });
         } else {
-          // 助手消息
+          // 如果没有流式消息，显示加载中
           result.push({
-            key: msg.id,
+            key: `${id}-ai`,
+            loading: true,
             role: 'ai',
-            content: h('div', {
-              innerHTML: marked(msg.content),
-              class: 'markdown-content',
-            }),
+            content: '正在思考...',
           });
         }
-      });
-    } else if (status === 'success') {
-      // 完成时，显示所有已接收的流式消息
-      streamingMessages.value.forEach((msg) => {
-        if (msg.type === 'SYSTEM') {
-          // 系统消息使用方形气泡样式
-          result.push({
-            key: msg.id,
-            role: 'system',
-            content: h('div', { class: 'system-message-content' }, [
-              h(Tag, { color: 'blue', size: 'small' }, () => '系统'),
-              h('span', { class: 'ml-2 text-sm text-gray-700' }, msg.content),
-            ]),
-          });
-        } else {
-          // 助手消息
-          result.push({
-            key: msg.id,
-            role: 'ai',
-            content: h('div', {
-              innerHTML: marked(msg.content),
-              class: 'markdown-content',
-            }),
-          });
+
+        break;
+      }
+      case 'local': {
+        result.push({
+          key: `${id}-user`,
+          role: 'local',
+          content: message,
+        });
+
+        break;
+      }
+      case 'success': {
+        // 完成时，显示该对话对应的所有流式消息
+        // 找到对应的会话ID（基于消息顺序）
+        const convIds = [...conversationMessages.value.keys()];
+        const currentMessage = messages.value[index];
+        if (!currentMessage) return;
+        const convIndex = messages.value
+          .filter((m) => m.status === 'success')
+          .indexOf(currentMessage);
+        if (convIndex !== -1 && convIndex < convIds.length) {
+          const convId = convIds[convIndex];
+          const convMessages = conversationMessages.value.get(convId!);
+          if (convMessages) {
+            convMessages.forEach((msg) => {
+              if (msg.type === 'SYSTEM') {
+                // 系统消息使用方形气泡样式
+                result.push({
+                  key: msg.id,
+                  role: 'system',
+                  content: h('div', { class: 'system-message-content' }, [
+                    h(Tag, { color: 'blue', size: 'small' }, () => '系统'),
+                    h(
+                      'span',
+                      { class: 'ml-2 text-sm text-gray-700' },
+                      msg.content,
+                    ),
+                  ]),
+                });
+              } else {
+                // 助手消息
+                result.push({
+                  key: msg.id,
+                  role: 'ai',
+                  content: h('div', {
+                    innerHTML: marked(msg.content),
+                    class: 'markdown-content',
+                  }),
+                });
+              }
+            });
+          }
         }
-      });
-    } else if (status === 'loading') {
-      // 如果没有流式消息，显示加载中
-      result.push({
-        key: `${id}-ai`,
-        loading: true,
-        role: 'ai',
-        content: '正在思考...',
-      });
+
+        break;
+      }
+      // No default
     }
   });
 
@@ -332,7 +387,7 @@ const items = computed<BubbleListProps['items']>(() => {
           v-if="items && items.length > 0"
           :items="items"
           :roles="roles"
-          class="h-full"
+          style="max-height: calc(100vh - 240px); overflow-y: auto"
         />
         <!-- 欢迎页面 -->
         <div v-else class="flex h-full flex-col justify-center">
@@ -354,7 +409,6 @@ const items = computed<BubbleListProps['items']>(() => {
                   transition: 'all 0.3s',
                 },
               }"
-              title="您可能想了解"
               @item-click="onPromptsItemClick"
             />
           </Space>
